@@ -1,0 +1,800 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Couch Studio 🛋️</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0e0e0f;
+    --bg2: #161618;
+    --bg3: #1e1e21;
+    --accent: #f5a623;
+    --accent2: #e8623a;
+    --text: #f0ede8;
+    --muted: #7a7975;
+    --border: rgba(245,166,35,0.15);
+    --card-bg: #131315;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 300;
+    overflow-x: hidden;
+  }
+
+  /* NOISE OVERLAY */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.4;
+  }
+
+  /* NAV */
+  nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 100;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.25rem 2.5rem;
+    background: rgba(14,14,15,0.85);
+    backdrop-filter: blur(16px);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .nav-logo {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 1.1rem;
+    letter-spacing: -0.02em;
+    color: var(--text);
+    text-decoration: none;
+  }
+
+  .nav-logo span { color: var(--accent); }
+
+  .nav-links {
+    display: flex;
+    gap: 2rem;
+    list-style: none;
+  }
+
+  .nav-links a {
+    color: var(--muted);
+    text-decoration: none;
+    font-size: 0.85rem;
+    font-weight: 400;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    transition: color 0.2s;
+  }
+
+  .nav-links a:hover { color: var(--accent); }
+
+  .lang-toggle {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 0.3rem 0.5rem;
+    display: flex;
+    gap: 0.25rem;
+  }
+
+  .lang-btn {
+    background: none;
+    border: none;
+    color: var(--muted);
+    font-size: 0.75rem;
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 500;
+    padding: 0.2rem 0.6rem;
+    border-radius: 14px;
+    cursor: pointer;
+    transition: all 0.2s;
+    letter-spacing: 0.05em;
+  }
+
+  .lang-btn.active {
+    background: var(--accent);
+    color: var(--bg);
+  }
+
+  /* HERO */
+  .hero {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 8rem 2.5rem 4rem;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .hero-glow {
+    position: absolute;
+    width: 600px;
+    height: 600px;
+    background: radial-gradient(circle, rgba(245,166,35,0.08) 0%, transparent 70%);
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+  }
+
+  .hero-glow2 {
+    position: absolute;
+    width: 400px;
+    height: 400px;
+    background: radial-gradient(circle, rgba(232,98,58,0.06) 0%, transparent 70%);
+    top: 20%; right: 10%;
+    pointer-events: none;
+  }
+
+  .hero-eyebrow {
+    font-size: 0.75rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--accent);
+    font-weight: 500;
+    margin-bottom: 1.5rem;
+    opacity: 0;
+    animation: fadeUp 0.6s ease forwards 0.2s;
+  }
+
+  .hero-title {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: clamp(3.5rem, 9vw, 8rem);
+    line-height: 0.95;
+    letter-spacing: -0.03em;
+    margin-bottom: 0.25rem;
+    opacity: 0;
+    animation: fadeUp 0.6s ease forwards 0.35s;
+  }
+
+  .hero-title .accent { color: var(--accent); }
+
+  .hero-sofa {
+    font-size: clamp(3rem, 7vw, 6.5rem);
+    display: inline-block;
+    opacity: 0;
+    animation: fadeUp 0.6s ease forwards 0.45s, float 4s ease-in-out infinite 1s;
+  }
+
+  .hero-sub {
+    font-size: clamp(1rem, 2vw, 1.25rem);
+    color: var(--muted);
+    max-width: 520px;
+    line-height: 1.6;
+    margin-top: 2rem;
+    font-weight: 300;
+    opacity: 0;
+    animation: fadeUp 0.6s ease forwards 0.55s;
+  }
+
+  .hero-cta {
+    display: flex;
+    gap: 1rem;
+    margin-top: 2.5rem;
+    flex-wrap: wrap;
+    opacity: 0;
+    animation: fadeUp 0.6s ease forwards 0.65s;
+  }
+
+  .btn-primary {
+    background: var(--accent);
+    color: var(--bg);
+    border: none;
+    padding: 0.85rem 2rem;
+    border-radius: 4px;
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 0.9rem;
+    letter-spacing: 0.02em;
+    cursor: pointer;
+    text-decoration: none;
+    transition: transform 0.2s, box-shadow 0.2s;
+    display: inline-block;
+  }
+
+  .btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 30px rgba(245,166,35,0.3);
+  }
+
+  .btn-ghost {
+    background: none;
+    color: var(--text);
+    border: 1px solid var(--border);
+    padding: 0.85rem 2rem;
+    border-radius: 4px;
+    font-family: 'Syne', sans-serif;
+    font-weight: 600;
+    font-size: 0.9rem;
+    letter-spacing: 0.02em;
+    cursor: pointer;
+    text-decoration: none;
+    transition: border-color 0.2s, color 0.2s;
+    display: inline-block;
+  }
+
+  .btn-ghost:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  .hero-stats {
+    display: flex;
+    gap: 3rem;
+    margin-top: 5rem;
+    opacity: 0;
+    animation: fadeUp 0.6s ease forwards 0.75s;
+  }
+
+  .stat-num {
+    font-family: 'Syne', sans-serif;
+    font-size: 2rem;
+    font-weight: 800;
+    color: var(--accent);
+  }
+
+  .stat-label {
+    font-size: 0.8rem;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-top: 0.1rem;
+  }
+
+  /* SECTIONS */
+  section {
+    padding: 6rem 2.5rem;
+    position: relative;
+  }
+
+  .section-header {
+    margin-bottom: 3rem;
+  }
+
+  .section-tag {
+    font-size: 0.7rem;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: var(--accent);
+    font-weight: 500;
+    margin-bottom: 0.75rem;
+    display: block;
+  }
+
+  .section-title {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: clamp(2rem, 4vw, 3rem);
+    letter-spacing: -0.02em;
+    line-height: 1.05;
+  }
+
+  /* PROJECTS GRID */
+  .projects-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1.5px;
+    border: 1.5px solid var(--border);
+  }
+
+  .project-card {
+    background: var(--card-bg);
+    padding: 2rem;
+    border: 1.5px solid var(--border);
+    margin: -1.5px;
+    transition: background 0.3s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .project-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(245,166,35,0.04), transparent);
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+
+  .project-card:hover { background: var(--bg3); }
+  .project-card:hover::before { opacity: 1; }
+
+  .project-icon {
+    font-size: 2rem;
+    margin-bottom: 1rem;
+    display: block;
+  }
+
+  .project-platform {
+    font-size: 0.65rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--accent);
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+  }
+
+  .project-name {
+    font-family: 'Syne', sans-serif;
+    font-size: 1.3rem;
+    font-weight: 700;
+    margin-bottom: 0.6rem;
+    letter-spacing: -0.01em;
+  }
+
+  .project-desc {
+    font-size: 0.875rem;
+    color: var(--muted);
+    line-height: 1.6;
+  }
+
+  .project-status {
+    display: inline-block;
+    margin-top: 1.25rem;
+    font-size: 0.7rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 0.3rem 0.75rem;
+    border-radius: 2px;
+    font-weight: 500;
+  }
+
+  .status-soon {
+    background: rgba(245,166,35,0.12);
+    color: var(--accent);
+    border: 1px solid rgba(245,166,35,0.25);
+  }
+
+  .status-live {
+    background: rgba(80,200,120,0.1);
+    color: #50c878;
+    border: 1px solid rgba(80,200,120,0.25);
+  }
+
+  .status-wip {
+    background: rgba(120,120,140,0.1);
+    color: var(--muted);
+    border: 1px solid rgba(120,120,140,0.2);
+  }
+
+  /* ABOUT */
+  #about {
+    background: var(--bg2);
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .about-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 5rem;
+    align-items: center;
+  }
+
+  .about-text p {
+    color: var(--muted);
+    line-height: 1.8;
+    font-size: 1rem;
+    margin-bottom: 1.25rem;
+  }
+
+  .about-text p strong {
+    color: var(--text);
+    font-weight: 500;
+  }
+
+  .about-stack {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 1.5rem;
+  }
+
+  .stack-tag {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    padding: 0.35rem 0.85rem;
+    border-radius: 2px;
+    font-size: 0.78rem;
+    color: var(--muted);
+    font-weight: 400;
+    letter-spacing: 0.03em;
+  }
+
+  .about-visual {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .about-card {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    padding: 1.5rem;
+    border-radius: 4px;
+  }
+
+  .about-card-title {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 0.85rem;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 0.5rem;
+  }
+
+  .about-card p {
+    font-size: 0.875rem;
+    color: var(--muted);
+    line-height: 1.6;
+  }
+
+  /* FOOTER */
+  footer {
+    padding: 3rem 2.5rem;
+    border-top: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  footer .logo {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 1rem;
+    letter-spacing: -0.02em;
+  }
+
+  footer .logo span { color: var(--accent); }
+
+  footer p {
+    font-size: 0.8rem;
+    color: var(--muted);
+  }
+
+  /* DIVIDER */
+  .divider {
+    width: 48px;
+    height: 2px;
+    background: var(--accent);
+    margin-top: 1rem;
+    margin-bottom: 0;
+  }
+
+  /* ANIMATIONS */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(24px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+  }
+
+  /* RESPONSIVE */
+  @media (max-width: 768px) {
+    nav { padding: 1rem 1.5rem; }
+    .nav-links { display: none; }
+    .hero { padding: 7rem 1.5rem 3rem; }
+    section { padding: 4rem 1.5rem; }
+    .about-grid { grid-template-columns: 1fr; gap: 2.5rem; }
+    .hero-stats { gap: 2rem; }
+    footer { flex-direction: column; gap: 1rem; text-align: center; }
+  }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a href="#" class="nav-logo">Couch<span>Studio</span> 🛋️</a>
+  <ul class="nav-links">
+    <li><a href="#apps" data-i18n="nav-apps">Apps</a></li>
+    <li><a href="#games" data-i18n="nav-games">Games</a></li>
+    <li><a href="#about" data-i18n="nav-about">About</a></li>
+  </ul>
+  <div class="lang-toggle">
+    <button class="lang-btn active" onclick="setLang('en')">EN</button>
+    <button class="lang-btn" onclick="setLang('it')">IT</button>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-glow"></div>
+  <div class="hero-glow2"></div>
+  <p class="hero-eyebrow" data-i18n="hero-eyebrow">Indie Studio — Roma, Italy</p>
+  <h1 class="hero-title">
+    Couch<span class="accent">Studio</span><br>
+    <span class="hero-sofa">🛋️</span>
+  </h1>
+  <p class="hero-sub" data-i18n="hero-sub">
+    Apps and games built from the couch — one idea at a time. Small studio, big ambitions.
+  </p>
+  <div class="hero-cta">
+    <a href="#apps" class="btn-primary" data-i18n="hero-cta1">See the projects</a>
+    <a href="#about" class="btn-ghost" data-i18n="hero-cta2">About us</a>
+  </div>
+  <div class="hero-stats">
+    <div>
+      <div class="stat-num">4</div>
+      <div class="stat-label" data-i18n="stat-apps">Apps</div>
+    </div>
+    <div>
+      <div class="stat-num">6</div>
+      <div class="stat-label" data-i18n="stat-games">Games</div>
+    </div>
+    <div>
+      <div class="stat-num">1</div>
+      <div class="stat-label" data-i18n="stat-dev">Developer</div>
+    </div>
+  </div>
+</section>
+
+<!-- APPS -->
+<section id="apps">
+  <div class="section-header">
+    <span class="section-tag" data-i18n="apps-tag">Mobile & Web</span>
+    <h2 class="section-title" data-i18n="apps-title">Apps</h2>
+    <div class="divider"></div>
+  </div>
+  <div class="projects-grid">
+
+    <div class="project-card">
+      <span class="project-icon">🧦</span>
+      <div class="project-platform">Flutter · Android</div>
+      <h3 class="project-name">SockPair</h3>
+      <p class="project-desc" data-i18n="sockpair-desc">Match your socks with AI — snap a photo and find the perfect pair in seconds.</p>
+      <span class="project-status status-soon" data-i18n="status-soon">Coming Soon</span>
+    </div>
+
+    <div class="project-card">
+      <span class="project-icon">🎬</span>
+      <div class="project-platform">React · Web</div>
+      <h3 class="project-name">Film Picker</h3>
+      <p class="project-desc" data-i18n="filmpicker-desc">Can't decide what to watch? Import your watchlist and let the wheel decide for you.</p>
+      <span class="project-status status-soon" data-i18n="status-soon">Coming Soon</span>
+    </div>
+
+    <div class="project-card">
+      <span class="project-icon">🎙️</span>
+      <div class="project-platform">React · Web</div>
+      <h3 class="project-name">ASMR Player</h3>
+      <p class="project-desc" data-i18n="asmr-desc">A relaxing ASMR video player with smart filters to find exactly the triggers you need.</p>
+      <span class="project-status status-soon" data-i18n="status-soon">Coming Soon</span>
+    </div>
+
+    <div class="project-card">
+      <span class="project-icon">🎵</span>
+      <div class="project-platform">React · Web</div>
+      <h3 class="project-name">SongTrace</h3>
+      <p class="project-desc" data-i18n="songtrace-desc">Remember a song but not its name? Describe it and let AI find it for you.</p>
+      <span class="project-status status-soon" data-i18n="status-soon">Coming Soon</span>
+    </div>
+
+  </div>
+</section>
+
+<!-- GAMES -->
+<section id="games">
+  <div class="section-header">
+    <span class="section-tag" data-i18n="games-tag">Roblox & Godot</span>
+    <h2 class="section-title" data-i18n="games-title">Games</h2>
+    <div class="divider"></div>
+  </div>
+  <div class="projects-grid">
+
+    <div class="project-card">
+      <span class="project-icon">🚀</span>
+      <div class="project-platform">Roblox</div>
+      <h3 class="project-name">Space Obby</h3>
+      <p class="project-desc" data-i18n="spaceobby-desc">A space-themed obstacle course on Roblox. Reach the end of the galaxy!</p>
+      <span class="project-status status-live" data-i18n="status-live">Live</span>
+    </div>
+
+    <div class="project-card">
+      <span class="project-icon">♻️</span>
+      <div class="project-platform">Roblox</div>
+      <h3 class="project-name">RecycleSim</h3>
+      <p class="project-desc" data-i18n="recyclesim-desc">Collect, sort and recycle waste to keep the city clean. A fun eco-management game.</p>
+      <span class="project-status status-soon" data-i18n="status-soon">Coming Soon</span>
+    </div>
+
+    <div class="project-card">
+      <span class="project-icon">⚡</span>
+      <div class="project-platform">Roblox</div>
+      <h3 class="project-name">Focus Rush</h3>
+      <p class="project-desc" data-i18n="focusrush-desc">A fast-paced multiplayer runner. Dodge obstacles and stay focused to survive.</p>
+      <span class="project-status status-wip" data-i18n="status-wip">In Development</span>
+    </div>
+
+    <div class="project-card">
+      <span class="project-icon">📺</span>
+      <div class="project-platform">Godot · Android</div>
+      <h3 class="project-name">AD Destroyer</h3>
+      <p class="project-desc" data-i18n="addestroyer-desc">A satirical mobile game where you destroy fake annoying ads. Cathartic and addictive.</p>
+      <span class="project-status status-soon" data-i18n="status-soon">Coming Soon</span>
+    </div>
+
+    <div class="project-card">
+      <span class="project-icon">🎸</span>
+      <div class="project-platform">Godot · Desktop</div>
+      <h3 class="project-name">PixelBand</h3>
+      <p class="project-desc" data-i18n="pixelband-desc">A pixel art RPG about a fictional rock band. Live the life behind the scenes of fame.</p>
+      <span class="project-status status-wip" data-i18n="status-wip">In Development</span>
+    </div>
+
+    <div class="project-card">
+      <span class="project-icon">🚗</span>
+      <div class="project-platform">Godot · Desktop</div>
+      <h3 class="project-name">Custom3D</h3>
+      <p class="project-desc" data-i18n="custom3d-desc">Import your own 3D car model and drive it on a test track. Your car, your rules.</p>
+      <span class="project-status status-wip" data-i18n="status-wip">In Development</span>
+    </div>
+
+  </div>
+</section>
+
+<!-- ABOUT -->
+<section id="about">
+  <div class="about-grid">
+    <div class="about-text">
+      <span class="section-tag" data-i18n="about-tag">The Studio</span>
+      <h2 class="section-title" data-i18n="about-title">Built from the couch</h2>
+      <div class="divider" style="margin-bottom: 2rem;"></div>
+      <p data-i18n="about-p1">
+        <strong>Couch Studio</strong> is a one-person indie studio based in Rome, Italy. Apps, mobile games, Roblox experiences — built with curiosity and shipped fast.
+      </p>
+      <p data-i18n="about-p2">
+        The philosophy is simple: launch MVPs, learn from real users, iterate. No bloat, no committee decisions. Just ideas turned into products.
+      </p>
+      <div class="about-stack">
+        <span class="stack-tag">Flutter</span>
+        <span class="stack-tag">React</span>
+        <span class="stack-tag">Godot</span>
+        <span class="stack-tag">Roblox / Lua</span>
+        <span class="stack-tag">Node.js</span>
+        <span class="stack-tag">Next.js</span>
+      </div>
+    </div>
+    <div class="about-visual">
+      <div class="about-card">
+        <div class="about-card-title" data-i18n="card1-title">🎯 Philosophy</div>
+        <p data-i18n="card1-desc">Ship early, ship often. A working MVP beats a perfect product that never launches.</p>
+      </div>
+      <div class="about-card">
+        <div class="about-card-title" data-i18n="card2-title">🛠️ Stack</div>
+        <p data-i18n="card2-desc">Flutter for mobile, React for web, Godot for games, Lua for Roblox. Always the right tool for the job.</p>
+      </div>
+      <div class="about-card">
+        <div class="about-card-title" data-i18n="card3-title">📍 Based in</div>
+        <p>Rome, Italy 🇮🇹</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="logo">Couch<span>Studio</span> 🛋️</div>
+  <p data-i18n="footer-text">© 2025 Couch Studio — Made with ☕ in Rome</p>
+</footer>
+
+<script>
+  const i18n = {
+    en: {
+      'nav-apps': 'Apps',
+      'nav-games': 'Games',
+      'nav-about': 'About',
+      'hero-eyebrow': 'Indie Studio — Roma, Italy',
+      'hero-sub': 'Apps and games built from the couch — one idea at a time. Small studio, big ambitions.',
+      'hero-cta1': 'See the projects',
+      'hero-cta2': 'About us',
+      'stat-apps': 'Apps',
+      'stat-games': 'Games',
+      'stat-dev': 'Developer',
+      'apps-tag': 'Mobile & Web',
+      'apps-title': 'Apps',
+      'games-tag': 'Roblox & Godot',
+      'games-title': 'Games',
+      'about-tag': 'The Studio',
+      'about-title': 'Built from the couch',
+      'about-p1': '<strong>Couch Studio</strong> is a one-person indie studio based in Rome, Italy. Apps, mobile games, Roblox experiences — built with curiosity and shipped fast.',
+      'about-p2': 'The philosophy is simple: launch MVPs, learn from real users, iterate. No bloat, no committee decisions. Just ideas turned into products.',
+      'card1-title': '🎯 Philosophy',
+      'card1-desc': 'Ship early, ship often. A working MVP beats a perfect product that never launches.',
+      'card2-title': '🛠️ Stack',
+      'card2-desc': 'Flutter for mobile, React for web, Godot for games, Lua for Roblox. Always the right tool for the job.',
+      'card3-title': '📍 Based in',
+      'sockpair-desc': 'Match your socks with AI — snap a photo and find the perfect pair in seconds.',
+      'filmpicker-desc': "Can't decide what to watch? Import your watchlist and let the wheel decide for you.",
+      'asmr-desc': 'A relaxing ASMR video player with smart filters to find exactly the triggers you need.',
+      'songtrace-desc': 'Remember a song but not its name? Describe it and let AI find it for you.',
+      'spaceobby-desc': 'A space-themed obstacle course on Roblox. Reach the end of the galaxy!',
+      'recyclesim-desc': 'Collect, sort and recycle waste to keep the city clean. A fun eco-management game.',
+      'focusrush-desc': 'A fast-paced multiplayer runner. Dodge obstacles and stay focused to survive.',
+      'addestroyer-desc': 'A satirical mobile game where you destroy fake annoying ads. Cathartic and addictive.',
+      'pixelband-desc': 'A pixel art RPG about a fictional rock band. Live the life behind the scenes of fame.',
+      'custom3d-desc': 'Import your own 3D car model and drive it on a test track. Your car, your rules.',
+      'status-soon': 'Coming Soon',
+      'status-live': 'Live',
+      'status-wip': 'In Development',
+      'footer-text': '© 2025 Couch Studio — Made with ☕ in Rome',
+    },
+    it: {
+      'nav-apps': 'App',
+      'nav-games': 'Giochi',
+      'nav-about': 'Chi siamo',
+      'hero-eyebrow': 'Studio Indie — Roma, Italia',
+      'hero-sub': 'App e giochi costruiti dal divano — un\'idea alla volta. Studio piccolo, ambizioni grandi.',
+      'hero-cta1': 'Vedi i progetti',
+      'hero-cta2': 'Chi siamo',
+      'stat-apps': 'App',
+      'stat-games': 'Giochi',
+      'stat-dev': 'Sviluppatore',
+      'apps-tag': 'Mobile & Web',
+      'apps-title': 'App',
+      'games-tag': 'Roblox & Godot',
+      'games-title': 'Giochi',
+      'about-tag': 'Lo Studio',
+      'about-title': 'Costruito dal divano',
+      'about-p1': '<strong>Couch Studio</strong> è uno studio indie solista con base a Roma. App, giochi mobile, esperienze Roblox — costruiti con curiosità e pubblicati in fretta.',
+      'about-p2': 'La filosofia è semplice: lancia MVP, impara dagli utenti reali, itera. Niente bloat, niente decisioni in comitato. Solo idee trasformate in prodotti.',
+      'card1-title': '🎯 Filosofia',
+      'card1-desc': 'Lancia presto, lancia spesso. Un MVP funzionante batte un prodotto perfetto che non esce mai.',
+      'card2-title': '🛠️ Stack',
+      'card2-desc': 'Flutter per mobile, React per web, Godot per giochi, Lua per Roblox. Sempre lo strumento giusto.',
+      'card3-title': '📍 Sede',
+      'sockpair-desc': 'Abbina i calzini con l\'AI — scatta una foto e trova il paio perfetto in pochi secondi.',
+      'filmpicker-desc': 'Non sai cosa guardare? Importa la tua watchlist e lascia che la ruota decida per te.',
+      'asmr-desc': 'Un player ASMR rilassante con filtri smart per trovare esattamente i trigger che cerchi.',
+      'songtrace-desc': 'Ricordi una canzone ma non il titolo? Descrivila e lascia che l\'AI la trovi per te.',
+      'spaceobby-desc': 'Un percorso ad ostacoli a tema spaziale su Roblox. Raggiungi la fine della galassia!',
+      'recyclesim-desc': 'Raccogli, smista e ricicla i rifiuti per tenere la città pulita. Un gioco eco-gestionale.',
+      'focusrush-desc': 'Un runner multiplayer frenetico. Schiva gli ostacoli e mantieni la concentrazione.',
+      'addestroyer-desc': 'Un gioco satirico dove distruggi pubblicità fastidiose fittizie. Catartico e dipendente.',
+      'pixelband-desc': 'Un RPG pixel art su una band rock fittizia. Vivi la vita dietro le quinte della fama.',
+      'custom3d-desc': 'Importa il tuo modello 3D di auto e guidalo su una pista. La tua macchina, le tue regole.',
+      'status-soon': 'Prossimamente',
+      'status-live': 'Disponibile',
+      'status-wip': 'In Sviluppo',
+      'footer-text': '© 2025 Couch Studio — Fatto con ☕ a Roma',
+    }
+  };
+
+  let currentLang = 'en';
+
+  function setLang(lang) {
+    currentLang = lang;
+    document.querySelectorAll('.lang-btn').forEach(btn => {
+      btn.classList.toggle('active', btn.textContent === lang.toUpperCase());
+    });
+    document.querySelectorAll('[data-i18n]').forEach(el => {
+      const key = el.getAttribute('data-i18n');
+      if (i18n[lang][key] !== undefined) {
+        el.innerHTML = i18n[lang][key];
+      }
+    });
+  }
+</script>
+</body>
+</html>
